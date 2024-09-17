@@ -2,6 +2,8 @@ from reportlab.lib.units import cm, mm
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.graphics.barcode import code39
 
+from config import use_mapping
+
 def draw_front_page(c, bereich, date_time):
     """Defines the width and height of the front page slip prints, 
        the distance between them, and their distance from the page 
@@ -239,13 +241,17 @@ def draw_slip_print(c, offsetLeft, offsetTop, width, height, obj):
     c.drawCentredString(0, 0, req_date)
     c.restoreState()
     
-    # BSKW:
+    # Pickup service point:
+    service_point = use_mapping["service_points"][obj["data"]["pickupServicePointName"]]
     c.setFont("Helvetica", 16)
-    c.saveState()
-    c.translate((offsetLeft + 16.2)*cm, (offsetTop + 8.2)*cm)
-    c.rotate(-90)
-    c.drawCentredString(0, 0, "OL")
-    c.restoreState()
+    if len(service_point) <= 3:
+	    c.saveState()
+	    c.translate((offsetLeft + 16.2)*cm, (offsetTop + 8.2)*cm)
+	    c.rotate(-90)
+	    c.drawCentredString(0, 0, service_point)
+	    c.restoreState()
+    else:
+    	c.drawCentredString((offsetLeft + 16)*cm, (offsetTop + 8.4)*cm, service_point)
     
     # Requester ID vertical:
     c.setFont("Times-Roman", 9)
@@ -264,20 +270,20 @@ def draw_slip_print(c, offsetLeft, offsetTop, width, height, obj):
     
     # Barcodes.
     # Item barcode:
-    item_barcode=code39.Extended39(item_id, barWidth=0.3*mm, barHeight=7*mm)
+    item_barcode=code39.Extended39(item_id, barWidth=0.3*mm, barHeight=7*mm, checksum=0)
     c.saveState()
     if len(item_id) == 8:
-    	c.translate((offsetLeft + 16.05)*cm, (offsetTop + 6.7075)*cm)
+    	c.translate((offsetLeft + 16.05)*cm, (offsetTop + 6.5)*cm)
     else:
-    	c.translate((offsetLeft + 16.05)*cm, (offsetTop + 7.1)*cm)
+    	c.translate((offsetLeft + 16.05)*cm, (offsetTop + 6.9)*cm)
     c.rotate(-90)
     item_barcode.drawOn(c, 0, 0)
     c.restoreState()
     
     # Requester barcode.
-    person_barcode=code39.Extended39(person_id, barWidth=0.2*mm, barHeight=12*mm)
+    person_barcode=code39.Extended39(person_id, barWidth=0.2*mm, barHeight=12*mm, checksum=0)
     c.saveState()
-    c.translate((offsetLeft + 17.25)*cm, (offsetTop + 5.3)*cm)
+    c.translate((offsetLeft + 17.25)*cm, (offsetTop + 5.2)*cm)
     c.rotate(-90)
     person_barcode.drawOn(c, 0, 0)
     c.restoreState()

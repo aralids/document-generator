@@ -125,13 +125,14 @@ def draw_3_slip_prints(c, json_obj1, json_obj2, json_obj3):
     slip_print_width = 18.7
     slip_print_height = 8.8
     
-    draw_slip_print(c, margin_left, margin_top, slip_print_width, slip_print_height, json_obj1)
+    
+    if json_obj3 != None:
+    	draw_slip_print(c, margin_left, margin_top, slip_print_width, slip_print_height, json_obj3)
     
     if json_obj2 != None:
     	draw_slip_print(c, margin_left, margin_top + slip_print_height + dist, slip_print_width, slip_print_height, json_obj2)
     
-    if json_obj3 != None:
-    	draw_slip_print(c, margin_left, margin_top + slip_print_height * 2 + dist * 2, slip_print_width, slip_print_height, json_obj3) 
+    draw_slip_print(c, margin_left, margin_top + slip_print_height * 2 + dist * 2, slip_print_width, slip_print_height, json_obj1) 
 
 def draw_slip_print(c, offsetLeft, offsetTop, width, height, obj):
     """Draws an individual slip print, which features a border,

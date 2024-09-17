@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, Response
 import json
 import sys
+import math
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from drawing_functions import draw_front_page, draw_3_slip_prints
@@ -26,18 +27,20 @@ def process_json():
     draw_front_page(c, "zbbskwug2", "06-08-2024 12:05")
     c.showPage()
     
-    # Draw the slip prints, placing 3 per page.
-    # (Or less on the last page, if len(data) % 3 != 0).
-    for i in range(0, len(data), 3):
+    # Sorting.
+    # If the JSON file contains 5 objects numbered 0 to 4,
+    # these are sorted as 4,2,0 - EMPTY,3,1 on 2 pages.
+    page_num = math.ceil(len(data) / 3)
+    for i in range(0, page_num):
     	json_obj1 = data[i]
     	
     	json_obj2 = None
-    	if (i + 1) <= (len(data) - 1):
-    	    json_obj2 = data[i+1]
+    	if (i + page_num) <= (len(data) - 1):
+    	    json_obj2 = data[i+page_num]
     	    
     	json_obj3 = None
-    	if (i + 2) <= (len(data) - 1):
-    	    json_obj3 = data[i+2]
+    	if (i + 2*page_num) <= (len(data) - 1):
+    	    json_obj3 = data[i+2*page_num]
     	    
     	draw_3_slip_prints(c, json_obj1, json_obj2, json_obj3)
     	c.showPage()

@@ -6,6 +6,6 @@ zb= {"service_points": {"ZB Lesesaal 1. OG": "OL",
 			"key6": "BSP",
 			"key7": "BNAT",
 			"key8": "MedHB"}
-}
+    }
 
 use_mapping = zb

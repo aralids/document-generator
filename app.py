@@ -1,12 +1,17 @@
 from fastapi import FastAPI, Response, Request, File, UploadFile, BackgroundTasks
 from fastapi.responses import HTMLResponse, FileResponse, StreamingResponse
+
 import json
-import sys
 from io import BytesIO
 import math
+from datetime import datetime
+
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
+
+
 from drawing_functions import draw_front_page, draw_3_slip_prints
+from config import use_mapping
 
 app = FastAPI()
 
@@ -49,7 +54,12 @@ async def process_json(request: Request, background_tasks: BackgroundTasks):
     c = canvas.Canvas(bfr, pagesize=A4, bottomup=0)
     
     # Draw the front page.
-    draw_front_page(c, "zbbskwug2", "06-08-2024 12:05")
+    group = data[0]["print_group_name"]
+    service_point = use_mapping["service_points"][group]
+    layout = use_mapping["layouts"][group]
+    now = datetime.now()
+    timestamp = now.strftime("%d-%m-%Y %H:%M")
+    draw_front_page(c, " ".join(group.split(" ")[1:]), timestamp)
     c.showPage()
     
     # Sorting.
@@ -67,7 +77,7 @@ async def process_json(request: Request, background_tasks: BackgroundTasks):
     	if (i + 2*page_num) <= (len(data) - 1):
     	    json_obj3 = data[i+2*page_num]
     	    
-    	draw_3_slip_prints(c, json_obj1, json_obj2, json_obj3)
+    	draw_3_slip_prints(c, service_point, layout, json_obj1, json_obj2, json_obj3)
     	c.showPage()
     	
     c.save()
@@ -75,5 +85,6 @@ async def process_json(request: Request, background_tasks: BackgroundTasks):
     background_tasks.add_task(bfr.close)
     pdf = bfr.getvalue()
     
-    headers = {'Content-Disposition': 'inline; filename="out.pdf"'}
+    
+    headers = {'Content-Disposition': 'attachment; filename="output.pdf"'}
     return Response(pdf, headers=headers, media_type='application/pdf')

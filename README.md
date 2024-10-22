@@ -20,7 +20,7 @@ The instructions below assume that Python and pip are installed on the machine.
 ## To run on Windows:
 - Open terminal in the document-generator folder.
 - Enter `venv\scripts\activate.bat`.
-- Enter `fastapi dev main.py`.
+- Enter `fastapi run`.
 - Open `http://127.0.0.1:8000` in browser to try out the app. 
 
 ## To install on Linux:
@@ -35,5 +35,5 @@ The instructions below assume that Python and pip are installed on the machine.
 ## To run on Linux:
 - Open terminal in the document-generator folder.
 - Enter `source venv/bin/activate`.
-- Enter `fastapi dev main.py`.
+- Enter `fastapi run`.
 - Open `http://127.0.0.1:8000` in browser to try out the app. 

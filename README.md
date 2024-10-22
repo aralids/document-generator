@@ -5,6 +5,9 @@ The instructions below assume that Python and pip are installed on the machine.
 > [!IMPORTANT]  
 > Please delete your document-generator folder if you have downloaded it before.
 
+> [!NOTE]  
+> Currently, the app is set up to respond to POST requests with an automatic download of the pdf output. To change this and receive the pdf as a regular API response, open main.py after you clone the code and replace line 89 with `headers = {'Content-Disposition': 'inline; filename="output.pdf"'}`. 
+
 ## To install on Windows:
 - Open terminal in a directory chosen for the project.
 - Make sure you have the virtualenv package installed by entering `pip install virtualenv`.
@@ -34,6 +37,3 @@ The instructions below assume that Python and pip are installed on the machine.
 - Enter `source venv/bin/activate`.
 - Enter `fastapi dev main.py`.
 - Open `http://127.0.0.1:8000` in browser to try out the app. 
-
-> [!NOTE]  
-> Currently, the app is set up to respond to POST requests with an automatic download of the pdf output. To change this and receive the pdf as a regular API response, modify main.py by replacing line 89 with `headers = {'Content-Disposition': 'inline; filename="output.pdf"'}`. 

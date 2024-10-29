@@ -419,3 +419,155 @@ def layout_1_zss(c, service_point, offsetLeft, offsetTop, width, height, obj):
     c.rotate(-90)
     person_barcode.drawOn(c, 0, 0)
     c.restoreState()
+    
+def layout_1_ret(c, service_point, offsetLeft, offsetTop, width, height, obj):
+    """Draws an individual slip print, which features a border,
+       8 horizontal lines, 5 vertical lines, 2 rectangles, 11 pieces 
+       of horizontal text, 4 pieces of vertical text, 2 (vertical)
+       barcodes.
+
+       Parameters
+       ----------
+       offsetLeft : float
+           Distance of the print from the left edge of the page in px.
+           
+       offsetTop : float
+           Distance of the print from the top edge of the page in px.
+           
+       width : float
+           Width of the slip print in px.
+       
+       height : float
+           Height of the slip print in px.
+           
+       bereich : str
+       	   The name of the Bereich of the group.
+       	   
+       obj : dict
+           Contains all of the properties for drawing the slip print.
+
+       Returns
+       -------
+       void
+    """
+    
+    # Image.
+    c.drawImage("./img.jpg", (offsetLeft + 3.7)*cm, (offsetTop + 1.3)*cm, width=11.3*cm, height=6.3*cm, mask=None)
+    
+    # Border.
+    c.rect(offsetLeft*cm, offsetTop*cm, width*cm, height*cm)
+    
+    # Horizontal lines from top to bottom.
+    c.line(offsetLeft*cm, (offsetTop + 1.3)*cm, (offsetLeft + width)*cm, (offsetTop + 1.3)*cm)
+    c.line(offsetLeft*cm, (offsetTop + 2.1)*cm, (offsetLeft + 3.7)*cm, (offsetTop + 2.1)*cm)
+    c.line(offsetLeft*cm, (offsetTop + 2.9)*cm, (offsetLeft + 3.7)*cm, (offsetTop + 2.9)*cm)
+    c.line(offsetLeft*cm, (offsetTop + 3.7)*cm, (offsetLeft + 3.7)*cm, (offsetTop + 3.7)*cm)
+    c.line((offsetLeft + 15)*cm, (offsetTop + 3.7)*cm, (offsetLeft + 15.8)*cm, (offsetTop + 3.7)*cm)
+    c.line((offsetLeft + 15)*cm, (offsetTop + 5.3)*cm, (offsetLeft + 15.8)*cm, (offsetTop + 5.3)*cm)
+    c.line((offsetLeft + 17)*cm, (offsetTop + 5.3)*cm, (offsetLeft + width)*cm, (offsetTop + 5.3)*cm)
+    c.line((offsetLeft + 3.7)*cm, (offsetTop + 7.6)*cm, (offsetLeft + 17)*cm, (offsetTop + 7.6)*cm)
+    
+    # Vertical lines from left to right.
+    c.line((offsetLeft + 2.55)*cm, (offsetTop + 2.1)*cm, (offsetLeft + 2.55)*cm, (offsetTop + 2.9)*cm)
+    c.line((offsetLeft + 3.7)*cm, (offsetTop)*cm, (offsetLeft + 3.7)*cm, (offsetTop + 7.6)*cm)
+    c.line((offsetLeft + 15)*cm, (offsetTop + 1.3)*cm, (offsetLeft + 15)*cm, (offsetTop + height)*cm)
+    c.line((offsetLeft + 15.8)*cm, (offsetTop + 1.3)*cm, (offsetLeft + 15.8)*cm, (offsetTop + 7.6)*cm)
+    c.line((offsetLeft + 17)*cm, (offsetTop + 1.3)*cm, (offsetLeft + 17)*cm, (offsetTop + height)*cm)
+    
+    # Text, from top to bottom, then from left to right.
+    # Requester id:
+    person_id = obj["data"]["requesterBarcode"]
+    c.setFont("Times-Roman", 9)
+    c.drawString((offsetLeft + 0.2)*cm, (offsetTop + 0.85)*cm, person_id[:4])
+    c.setFont("Times-Roman", 16)
+    c.drawString((offsetLeft + 0.95)*cm, (offsetTop + 0.85)*cm, person_id[4:6] + " " + person_id[6:9] + " " + person_id[9:])
+    
+    # Request time:
+    req_time_lst = obj["data"]["requestDate"].split("T")
+    req_date = "-".join(req_time_lst[0].split("-")[::-1])
+    req_hour = ":".join(req_time_lst[1].split(":")[:2])
+    c.setFont("Times-Roman", 12)
+    c.drawCentredString((offsetLeft + 1.275)*cm, (offsetTop + 2.66)*cm, req_date)
+    c.setFont("Times-Roman", 12)
+    c.drawCentredString((offsetLeft + 3.125)*cm, (offsetTop + 2.66)*cm, req_hour)
+    
+    # Author name and book title:
+    # c.setFont("Times-Roman", 12)
+    # c.drawString((offsetLeft + 0.36)*cm, (offsetTop + 5.3)*cm, obj["data"]["instanceContributorName"])
+    # c.drawString((offsetLeft + 0.36)*cm, (offsetTop + 5.9)*cm, obj["data"]["instanceTitle"])
+    
+    # Checkboxes:
+    c.rect((offsetLeft + 0.1)*cm, (offsetTop + 5)*cm, 0.4*cm, 0.4*cm)
+    c.drawString((offsetLeft + 0.6)*cm, (offsetTop + 5.3)*cm, "verliehen")
+    c.rect((offsetLeft + 0.1)*cm, (offsetTop + 6)*cm, 0.4*cm, 0.4*cm)
+    c.drawString((offsetLeft + 0.6)*cm, (offsetTop + 6.3)*cm, "nicht am Standort")
+    
+    # Universitätsbibliothek Frankfurt am Main:
+    c.drawString((offsetLeft + 0.36)*cm, (offsetTop + 8.35)*cm, "Universitätsbibliothek Frankfurt am Main")
+    
+    # Item call number:
+    c.setFont("Times-Roman", 16)
+    width = stringWidth(obj["data"]["itemCallNumber"], "Times-Roman", 16)
+    c.drawString(542.425 - width, (offsetTop + 0.85)*cm, obj["data"]["itemCallNumber"])
+    
+    # Item ID:
+    item_id = obj["data"]["itemBarcode"]
+    c.setFont("Helvetica", 11)
+    c.saveState()
+    c.translate((offsetLeft + 15.55)*cm, (offsetTop + 2.5)*cm)
+    c.rotate(-90)
+    c.drawCentredString(0, 0, item_id[:2] + " " + item_id[2:5] + " " + item_id[5:])
+    c.restoreState()
+    
+    # Request date vertical:
+    c.setFont("Times-Roman", 12)
+    c.saveState()
+    c.translate((offsetLeft + 15.55)*cm, (offsetTop + 6.45)*cm)
+    c.rotate(-90)
+    c.drawCentredString(0, 0, req_date)
+    c.restoreState()
+    
+    # Pickup service point:
+    c.setFont("Helvetica", 16)
+    if len(service_point) <= 3:
+	    c.saveState()
+	    c.translate((offsetLeft + 16.2)*cm, (offsetTop + 8.2)*cm)
+	    c.rotate(-90)
+	    c.drawCentredString(0, 0, service_point)
+	    c.restoreState()
+    else:
+    	c.drawCentredString((offsetLeft + 16)*cm, (offsetTop + 8.4)*cm, service_point)
+    
+    # Requester ID vertical:
+    c.setFont("Times-Roman", 9)
+    c.saveState()
+    c.translate((offsetLeft + 18.05)*cm, (offsetTop + 8.65)*cm)
+    c.rotate(-90)
+    c.drawString(0, 0, person_id[:4])
+    c.restoreState()
+    
+    c.setFont("Times-Roman", 16)
+    c.saveState()
+    c.translate((offsetLeft + 18.05)*cm, (offsetTop + 7.95)*cm)
+    c.rotate(-90)
+    c.drawString(0, 0, person_id[4:6] + " " + person_id[6:9] + " " + person_id[9:])
+    c.restoreState()
+    
+    # Item barcode:
+    item_barcode=code39.Extended39(item_id, barWidth=0.3*mm, barHeight=7*mm, checksum=0)
+    c.saveState()
+    if len(item_id) == 8:
+    	c.translate((offsetLeft + 16.05)*cm, (offsetTop + 7.15)*cm)
+    else:
+    	c.translate((offsetLeft + 16.05)*cm, (offsetTop + 7.55)*cm)
+    c.rotate(-90)
+    item_barcode.drawOn(c, 0, 0)
+    c.restoreState()
+    
+    # Requester barcode.
+    person_barcode=code39.Extended39(person_id, barWidth=0.2*mm, barHeight=12*mm, checksum=0)
+    c.saveState()
+    c.translate((offsetLeft + 17.25)*cm, (offsetTop + 5.8)*cm)
+    c.rotate(-90)
+    person_barcode.drawOn(c, 0, 0)
+    c.restoreState()

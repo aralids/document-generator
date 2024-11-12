@@ -1,6 +1,7 @@
 from reportlab.lib.units import cm, mm
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.graphics.barcode import code39
+from reportlab.lib import colors
 
 def draw_front_page(c, bereich, date_time):
     """Defines the width and height of the front page slip prints, 
@@ -570,4 +571,100 @@ def layout_1_ret(c, service_point, offsetLeft, offsetTop, width, height, obj):
     c.translate((offsetLeft + 17.25)*cm, (offsetTop + 5.8)*cm)
     c.rotate(-90)
     person_barcode.drawOn(c, 0, 0)
+    c.restoreState()
+    
+def layout_2(c, service_point, offsetLeft, offsetTop, width, height, obj):
+    """Draws an individual slip print, which features a border,
+       8 horizontal lines, 5 vertical lines, 2 rectangles, 11 pieces 
+       of horizontal text, 4 pieces of vertical text, 2 (vertical)
+       barcodes.
+
+       Parameters
+       ----------
+       offsetLeft : float
+           Distance of the print from the left edge of the page in px.
+           
+       offsetTop : float
+           Distance of the print from the top edge of the page in px.
+           
+       width : float
+           Width of the slip print in px.
+       
+       height : float
+           Height of the slip print in px.
+           
+       bereich : str
+       	   The name of the Bereich of the group.
+       	   
+       obj : dict
+           Contains all of the properties for drawing the slip print.
+
+       Returns
+       -------
+       void
+    """
+    
+    # Border.
+    c.setFillColorRGB(0.64, 0.91, 0.33)
+    c.setStrokeColorRGB(0.64, 0.91, 0.33)
+    c.rect(offsetLeft*cm, offsetTop*cm, width*cm, height*cm, fill=1)
+    c.setFillColorRGB(0, 0, 0)
+    c.setStrokeColorRGB(0, 0, 0)
+    
+    # Universitätsbibliothek Frankfurt am Main:
+    c.setFont("Helvetica", 14)
+    c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 1.5)*cm, "Universitätsbibliothek Johann Christian Senckenberg")
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 2.1)*cm, "Vormerkung")
+    
+    c.setFont("Helvetica", 12)
+    c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 3.45)*cm, "Fristzettel vom 08.11.22")
+    
+    c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 4.35)*cm, "für")
+    c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 4.85)*cm, obj["data"]["requesterBarcode"])
+    c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 5.35)*cm, obj["data"]["requestStatus"])
+    
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 6.75)*cm, "Signatur:")
+    c.setFont("Helvetica", 12)
+    c.drawString((offsetLeft + 3.5)*cm, (offsetTop + 6.75)*cm, "90.068.19")
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 7.25)*cm, "Titel:")
+    c.setFont("Helvetica", 12)
+    c.drawString((offsetLeft + 2.7)*cm, (offsetTop + 7.25)*cm, obj["data"]["instanceTitle"])
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 7.75)*cm, "Buchnr:")
+    c.setFont("Helvetica", 12)
+    c.drawString((offsetLeft + 3.25)*cm, (offsetTop + 7.75)*cm, obj["data"]["itemBarcode"])
+    
+    # Request date vertical:
+    c.setFont("Helvetica-Bold", 17)
+    c.saveState()
+    c.translate((offsetLeft + 16.1)*cm, (offsetTop + (height / 2))*cm)
+    c.rotate(-90)
+    c.drawCentredString(0, 0, obj["data"]["pickupServicePointName"])
+    c.restoreState()
+    
+    # Request date vertical:
+    c.setFont("Helvetica-Bold", 17)
+    c.saveState()
+    c.translate((offsetLeft + 16.8)*cm, (offsetTop + (height / 2))*cm)
+    c.rotate(-90)
+    c.drawCentredString(0, 0, "Abräumen 15.11.2024")
+    c.restoreState()
+    
+    # Request date vertical:
+    c.setFont("Helvetica-Bold", 17)
+    c.saveState()
+    c.translate((offsetLeft + 17.75)*cm, (offsetTop + 6.8)*cm)
+    c.rotate(-90)
+    c.drawCentredString(0, 0, obj["data"]["requesterBarcode"][:4])
+    c.restoreState()
+    
+    # Request date vertical:
+    c.setFont("Helvetica-Bold", 25)
+    c.saveState()
+    c.translate((offsetLeft + 17.75)*cm, (offsetTop + 3.65)*cm)
+    c.rotate(-90)
+    c.drawCentredString(0, 0, obj["data"]["requesterBarcode"][4:6] + " " + obj["data"]["requesterBarcode"][6:9] + " " + obj["data"]["requesterBarcode"][9:])
     c.restoreState()

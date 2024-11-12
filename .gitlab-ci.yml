@@ -1,8 +1,8 @@
 stages:
-  - build
+  - dockerize
 
 build:
-  stage: build
+  stage: dockerize
   image:
     name: gcr.io/kaniko-project/executor:v1.23.2-debug
     entrypoint: [""]

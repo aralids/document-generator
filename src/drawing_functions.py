@@ -1,7 +1,6 @@
 from reportlab.lib.units import cm, mm
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.graphics.barcode import code39
-from reportlab.lib import colors
 
 def draw_front_page(c, bereich, date_time):
     """Defines the width and height of the front page slip prints, 
@@ -453,7 +452,12 @@ def layout_1_ret(c, service_point, offsetLeft, offsetTop, width, height, obj):
     """
     
     # Image.
-    c.drawImage("./img.jpg", (offsetLeft + 3.7)*cm, (offsetTop + 1.3)*cm, width=11.3*cm, height=6.3*cm, mask=None)
+    img_url = "https://resolver.hebis.de/retro/" + obj["data"]["itemBarcode"]
+    c.saveState()
+    c.translate((offsetLeft + 15)*cm, (offsetTop + 1.3)*cm)
+    c.scale(1,-1)
+    c.drawImage(img_url, 0, 0, width=-11.3*cm, height=-6.3*cm, mask=None)
+    c.restoreState()
     
     # Border.
     c.rect(offsetLeft*cm, offsetTop*cm, width*cm, height*cm)
@@ -552,17 +556,6 @@ def layout_1_ret(c, service_point, offsetLeft, offsetTop, width, height, obj):
     c.translate((offsetLeft + 18.05)*cm, (offsetTop + 7.95)*cm)
     c.rotate(-90)
     c.drawString(0, 0, person_id[4:6] + " " + person_id[6:9] + " " + person_id[9:])
-    c.restoreState()
-    
-    # Item barcode:
-    item_barcode=code39.Extended39(item_id, barWidth=0.3*mm, barHeight=7*mm, checksum=0)
-    c.saveState()
-    if len(item_id) == 8:
-    	c.translate((offsetLeft + 16.05)*cm, (offsetTop + 7.15)*cm)
-    else:
-    	c.translate((offsetLeft + 16.05)*cm, (offsetTop + 7.55)*cm)
-    c.rotate(-90)
-    item_barcode.drawOn(c, 0, 0)
     c.restoreState()
     
     # Requester barcode.

@@ -459,6 +459,7 @@ def layout_1_ret(c, service_point, offsetLeft, offsetTop, width, height, obj):
     c.drawImage(img_url, 0, 0, width=-11.3*cm, height=-6.3*cm, mask=None)
     c.restoreState()
     
+    
     # Border.
     c.rect(offsetLeft*cm, offsetTop*cm, width*cm, height*cm)
     

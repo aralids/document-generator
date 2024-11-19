@@ -9,6 +9,6 @@ RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 COPY ./src/ /code/src
 WORKDIR /code/src
 
-EXPOSE 8000
+EXPOSE 9000
 
-CMD ["fastapi", "run", "main.py", "--port", "8000"]
+CMD ["fastapi", "run", "main.py", "--port", "9000"]

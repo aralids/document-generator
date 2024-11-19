@@ -75,17 +75,13 @@ async def process_json(request: Request, background_tasks: BackgroundTasks):
     #headers = {'Content-Disposition': 'attachment; filename="output.pdf"'}
     #return Response(pdf, headers=headers, media_type='application/pdf')
 
+@app.post("/")
+@app.post("/pdf")
 @app.post("/process_json")
 async def process_json(request: Request, background_tasks: BackgroundTasks):
-    form = await request.form()
-    #filename = form['json_file'].filename 
-    
     # Load the JSON file.
-    f = await form['json_file'].read()
-    data = json.loads(f)
+    data = await request.json()
     
-    # Generate an empty PDF file in the "output" folder with 
-    # the same name as the JSON file in the "input" folder.
     bfr = BytesIO()
     c = canvas.Canvas(bfr, pagesize=A4, bottomup=0)
     

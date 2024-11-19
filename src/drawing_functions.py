@@ -2,6 +2,9 @@ from reportlab.lib.units import cm, mm
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.graphics.barcode import code39
 
+def create_pdf(json_data):
+    return
+
 def draw_front_page(c, bereich, date_time):
     """Defines the width and height of the front page slip prints, 
        the distance between them, and their distance from the page 
@@ -616,12 +619,12 @@ def layout_2(c, service_point, offsetLeft, offsetTop, width, height, obj):
     
     c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 4.35)*cm, "für")
     c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 4.85)*cm, obj["data"]["requesterBarcode"])
-    c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 5.35)*cm, obj["data"]["requestStatus"])
+    # c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 5.35)*cm, obj["data"]["requestStatus"])
     
     c.setFont("Helvetica-Bold", 12)
     c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 6.75)*cm, "Signatur:")
     c.setFont("Helvetica", 12)
-    c.drawString((offsetLeft + 3.5)*cm, (offsetTop + 6.75)*cm, "90.068.19")
+    c.drawString((offsetLeft + 3.5)*cm, (offsetTop + 6.75)*cm, obj["data"]["itemCallNumber"])
     c.setFont("Helvetica-Bold", 12)
     c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 7.25)*cm, "Titel:")
     c.setFont("Helvetica", 12)

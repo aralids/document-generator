@@ -2,8 +2,51 @@ from reportlab.lib.units import cm, mm
 from reportlab.pdfbase.pdfmetrics import stringWidth
 from reportlab.graphics.barcode import code39
 
-def create_pdf(json_data):
-    return
+from io import BytesIO
+import math
+from datetime import datetime, timedelta
+
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+
+from config import use_mapping
+
+def create_pdf(data, background_tasks):
+    bfr = BytesIO()
+    c = canvas.Canvas(bfr, pagesize=A4, bottomup=0)
+    
+    # Draw the front page.
+    group = data[0]["print_group_name"]
+    service_point = use_mapping["service_points"][group]
+    layout = use_mapping["layouts"][group]
+    now = datetime.now()
+    timestamp = now.strftime("%d-%m-%Y %H:%M")
+    draw_front_page(c, " ".join(group.split(" ")[1:]), timestamp)
+    c.showPage()
+    
+    # Sorting.
+    # If the JSON file contains 5 objects numbered 0 to 4,
+    # these are sorted as 4,2,0 - EMPTY,3,1 on 2 pages.
+    page_num = math.ceil(len(data) / 3)
+    for i in range(0, page_num):
+    	json_obj1 = data[i]
+    	
+    	json_obj2 = None
+    	if (i + page_num) <= (len(data) - 1):
+    	    json_obj2 = data[i+page_num]
+    	    
+    	json_obj3 = None
+    	if (i + 2*page_num) <= (len(data) - 1):
+    	    json_obj3 = data[i+2*page_num]
+    	    
+    	draw_3_slip_prints(c, service_point, layout, json_obj1, json_obj2, json_obj3)
+    	c.showPage()
+    	
+    c.save()
+    
+    background_tasks.add_task(bfr.close)
+    pdf = bfr.getvalue()
+    return pdf
 
 def draw_front_page(c, bereich, date_time):
     """Defines the width and height of the front page slip prints, 
@@ -603,8 +646,8 @@ def layout_2(c, service_point, offsetLeft, offsetTop, width, height, obj):
     
     # Border.
     c.setFillColorRGB(0.64, 0.91, 0.33)
-    c.setStrokeColorRGB(0.64, 0.91, 0.33)
-    c.rect(offsetLeft*cm, offsetTop*cm, width*cm, height*cm, fill=1)
+    c.setStrokeColorRGB(0.9, 0.9, 0.9)
+    c.rect(offsetLeft*cm, offsetTop*cm, width*cm, height*cm, fill=0)
     c.setFillColorRGB(0, 0, 0)
     c.setStrokeColorRGB(0, 0, 0)
     
@@ -615,7 +658,9 @@ def layout_2(c, service_point, offsetLeft, offsetTop, width, height, obj):
     c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 2.1)*cm, "Vormerkung")
     
     c.setFont("Helvetica", 12)
-    c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 3.45)*cm, "Fristzettel vom 08.11.22")
+    now = datetime.now()
+    timestamp = now.strftime("%d.%m.%Y")
+    c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 3.45)*cm, "Fristzettel vom " + timestamp)
     
     c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 4.35)*cm, "für")
     c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 4.85)*cm, obj["data"]["requesterBarcode"])
@@ -647,7 +692,9 @@ def layout_2(c, service_point, offsetLeft, offsetTop, width, height, obj):
     c.saveState()
     c.translate((offsetLeft + 16.8)*cm, (offsetTop + (height / 2))*cm)
     c.rotate(-90)
-    c.drawCentredString(0, 0, "Abräumen 15.11.2024")
+    week_after = now + timedelta(days=7)
+    timestamp1 = week_after.strftime("%d.%m.%Y")
+    c.drawCentredString(0, 0, "Abräumen " + timestamp1)
     c.restoreState()
     
     # Request date vertical:

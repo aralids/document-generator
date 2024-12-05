@@ -2,6 +2,9 @@ from fastapi import FastAPI, Response, Request, File, UploadFile, BackgroundTask
 from fastapi.responses import HTMLResponse, FileResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 
+import json
+import base64
+
 from drawing_functions import create_pdf
 
 app = FastAPI()
@@ -18,6 +21,8 @@ async def process_json(request: Request, background_tasks: BackgroundTasks):
     data = json.loads(f)
     
     pdf = create_pdf(data, background_tasks)
+    if not pdf:
+    	return
     pdf_b64 = base64.b64encode(pdf).decode("utf-8")
     return templates.TemplateResponse('preview.html', {'request': request, "pdf_file": pdf_b64})
 

@@ -10,15 +10,23 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 
 from config import use_mapping
+from error_handling import check_fields
 
 def create_pdf(data, background_tasks):
+    print("data: ", data)
     bfr = BytesIO()
     c = canvas.Canvas(bfr, pagesize=A4, bottomup=0)
     
     # Draw the front page.
-    group = data[0]["print_group_name"]
+    group = data["print_group_name"]
+    print("group: ", group)
     service_point = use_mapping["service_points"][group]
     layout = use_mapping["layouts"][group]
+    objs = data["data"]
+    if not check_fields(layout, objs):
+    	print("Please edit your JSON file.\n")
+    	return
+    
     now = datetime.now()
     timestamp = now.strftime("%d-%m-%Y %H:%M")
     draw_front_page(c, " ".join(group.split(" ")[1:]), timestamp)
@@ -27,17 +35,17 @@ def create_pdf(data, background_tasks):
     # Sorting.
     # If the JSON file contains 5 objects numbered 0 to 4,
     # these are sorted as 4,2,0 - EMPTY,3,1 on 2 pages.
-    page_num = math.ceil(len(data) / 3)
+    page_num = math.ceil(len(objs) / 3)
     for i in range(0, page_num):
-    	json_obj1 = data[i]
+    	json_obj1 = objs[i]
     	
     	json_obj2 = None
-    	if (i + page_num) <= (len(data) - 1):
-    	    json_obj2 = data[i+page_num]
+    	if (i + page_num) <= (len(objs) - 1):
+    	    json_obj2 = objs[i+page_num]
     	    
     	json_obj3 = None
-    	if (i + 2*page_num) <= (len(data) - 1):
-    	    json_obj3 = data[i+2*page_num]
+    	if (i + 2*page_num) <= (len(objs) - 1):
+    	    json_obj3 = objs[i+2*page_num]
     	    
     	draw_3_slip_prints(c, service_point, layout, json_obj1, json_obj2, json_obj3)
     	c.showPage()
@@ -231,14 +239,14 @@ def layout_1_def(c, service_point, offsetLeft, offsetTop, width, height, obj):
     
     # Text, from top to bottom, then from left to right.
     # Requester id:
-    person_id = obj["data"]["requesterBarcode"]
+    person_id = obj["requesterBarcode"]
     c.setFont("Times-Roman", 9)
     c.drawString((offsetLeft + 0.2)*cm, (offsetTop + 0.85)*cm, person_id[:4])
     c.setFont("Times-Roman", 16)
     c.drawString((offsetLeft + 0.95)*cm, (offsetTop + 0.85)*cm, person_id[4:6] + " " + person_id[6:9] + " " + person_id[9:])
     
     # Request time:
-    req_time_lst = obj["data"]["requestDate"].split("T")
+    req_time_lst = obj["requestDate"].split("T")
     req_date = "-".join(req_time_lst[0].split("-")[::-1])
     req_hour = ":".join(req_time_lst[1].split(":")[:2])
     c.setFont("Times-Roman", 12)
@@ -248,8 +256,8 @@ def layout_1_def(c, service_point, offsetLeft, offsetTop, width, height, obj):
     
     # Author name and book title:
     c.setFont("Times-Roman", 12)
-    c.drawString((offsetLeft + 0.36)*cm, (offsetTop + 5.3)*cm, obj["data"]["instanceContributorName"])
-    c.drawString((offsetLeft + 0.36)*cm, (offsetTop + 5.9)*cm, obj["data"]["instanceTitle"])
+    c.drawString((offsetLeft + 0.36)*cm, (offsetTop + 5.3)*cm, obj["instanceContributorName"])
+    c.drawString((offsetLeft + 0.36)*cm, (offsetTop + 5.9)*cm, obj["instanceTitle"])
     
     # Checkboxes:
     c.rect((offsetLeft + 1.15)*cm, (offsetTop + 6.85)*cm, 0.4*cm, 0.4*cm)
@@ -262,11 +270,11 @@ def layout_1_def(c, service_point, offsetLeft, offsetTop, width, height, obj):
     
     # Item call number:
     c.setFont("Times-Roman", 16)
-    width = stringWidth(obj["data"]["itemCallNumber"], "Times-Roman", 16)
-    c.drawString(442.425 - width, (offsetTop + 0.85)*cm, obj["data"]["itemCallNumber"])
+    width = stringWidth(obj["itemCallNumber"], "Times-Roman", 16)
+    c.drawString(442.425 - width, (offsetTop + 0.85)*cm, obj["itemCallNumber"])
     
     # Item ID:
-    item_id = obj["data"]["itemBarcode"]
+    item_id = obj["itemBarcode"]
     c.setFont("Helvetica", 16)
     c.saveState()
     c.translate((offsetLeft + 15.6)*cm, (offsetTop + 1.85)*cm)
@@ -329,35 +337,6 @@ def layout_1_def(c, service_point, offsetLeft, offsetTop, width, height, obj):
     c.restoreState()
 
 def layout_1_zss(c, service_point, offsetLeft, offsetTop, width, height, obj):
-    """Draws an individual slip print, which features a border,
-       8 horizontal lines, 5 vertical lines, 2 rectangles, 11 pieces 
-       of horizontal text, 4 pieces of vertical text, 2 (vertical)
-       barcodes.
-
-       Parameters
-       ----------
-       offsetLeft : float
-           Distance of the print from the left edge of the page in px.
-           
-       offsetTop : float
-           Distance of the print from the top edge of the page in px.
-           
-       width : float
-           Width of the slip print in px.
-       
-       height : float
-           Height of the slip print in px.
-           
-       bereich : str
-       	   The name of the Bereich of the group.
-       	   
-       obj : dict
-           Contains all of the properties for drawing the slip print.
-
-       Returns
-       -------
-       void
-    """
     
     # Border.
     c.rect(offsetLeft*cm, offsetTop*cm, width*cm, height*cm)
@@ -381,14 +360,14 @@ def layout_1_zss(c, service_point, offsetLeft, offsetTop, width, height, obj):
     
     # Text, from top to bottom, then from left to right.
     # Requester id:
-    person_id = obj["data"]["requesterBarcode"]
+    person_id = obj["requesterBarcode"]
     c.setFont("Times-Roman", 9)
     c.drawString((offsetLeft + 0.2)*cm, (offsetTop + 0.85)*cm, person_id[:4])
     c.setFont("Times-Roman", 16)
     c.drawString((offsetLeft + 0.95)*cm, (offsetTop + 0.85)*cm, person_id[4:6] + " " + person_id[6:9] + " " + person_id[9:])
     
     # Request time:
-    req_time_lst = obj["data"]["requestDate"].split("T")
+    req_time_lst = obj["requestDate"].split("T")
     req_date = "-".join(req_time_lst[0].split("-")[::-1])
     req_hour = ":".join(req_time_lst[1].split(":")[:2])
     c.setFont("Times-Roman", 12)
@@ -398,8 +377,8 @@ def layout_1_zss(c, service_point, offsetLeft, offsetTop, width, height, obj):
     
     # Author name and book title:
     c.setFont("Times-Roman", 12)
-    c.drawString((offsetLeft + 0.36)*cm, (offsetTop + 5.3)*cm, obj["data"]["instanceContributorName"])
-    c.drawString((offsetLeft + 0.36)*cm, (offsetTop + 5.9)*cm, obj["data"]["instanceTitle"])
+    c.drawString((offsetLeft + 0.36)*cm, (offsetTop + 5.3)*cm, obj["instanceContributorName"])
+    c.drawString((offsetLeft + 0.36)*cm, (offsetTop + 5.9)*cm, obj["instanceTitle"])
     
     # Checkboxes:
     c.rect((offsetLeft + 1.15)*cm, (offsetTop + 6.85)*cm, 0.4*cm, 0.4*cm)
@@ -412,8 +391,8 @@ def layout_1_zss(c, service_point, offsetLeft, offsetTop, width, height, obj):
     
     # Item call number:
     c.setFont("Times-Roman", 16)
-    width = stringWidth(obj["data"]["itemCallNumber"], "Times-Roman", 16)
-    c.drawString(442.425 - width, (offsetTop + 0.85)*cm, obj["data"]["itemCallNumber"])
+    width = stringWidth(obj["itemCallNumber"], "Times-Roman", 16)
+    c.drawString(442.425 - width, (offsetTop + 0.85)*cm, obj["itemCallNumber"])
     
     # Item ID:
     item_id = "zzzzzzzz"
@@ -467,38 +446,9 @@ def layout_1_zss(c, service_point, offsetLeft, offsetTop, width, height, obj):
     c.restoreState()
     
 def layout_1_ret(c, service_point, offsetLeft, offsetTop, width, height, obj):
-    """Draws an individual slip print, which features a border,
-       8 horizontal lines, 5 vertical lines, 2 rectangles, 11 pieces 
-       of horizontal text, 4 pieces of vertical text, 2 (vertical)
-       barcodes.
-
-       Parameters
-       ----------
-       offsetLeft : float
-           Distance of the print from the left edge of the page in px.
-           
-       offsetTop : float
-           Distance of the print from the top edge of the page in px.
-           
-       width : float
-           Width of the slip print in px.
-       
-       height : float
-           Height of the slip print in px.
-           
-       bereich : str
-       	   The name of the Bereich of the group.
-       	   
-       obj : dict
-           Contains all of the properties for drawing the slip print.
-
-       Returns
-       -------
-       void
-    """
     
     # Image.
-    img_url = "https://resolver.hebis.de/retro/" + obj["data"]["itemBarcode"]
+    img_url = "https://resolver.hebis.de/retro/" + obj["itemBarcode"]
     c.saveState()
     c.translate((offsetLeft + 15)*cm, (offsetTop + 1.3)*cm)
     c.scale(1,-1)
@@ -528,25 +478,20 @@ def layout_1_ret(c, service_point, offsetLeft, offsetTop, width, height, obj):
     
     # Text, from top to bottom, then from left to right.
     # Requester id:
-    person_id = obj["data"]["requesterBarcode"]
+    person_id = obj["requesterBarcode"]
     c.setFont("Times-Roman", 9)
     c.drawString((offsetLeft + 0.2)*cm, (offsetTop + 0.85)*cm, person_id[:4])
     c.setFont("Times-Roman", 16)
     c.drawString((offsetLeft + 0.95)*cm, (offsetTop + 0.85)*cm, person_id[4:6] + " " + person_id[6:9] + " " + person_id[9:])
     
     # Request time:
-    req_time_lst = obj["data"]["requestDate"].split("T")
+    req_time_lst = obj["requestDate"].split("T")
     req_date = "-".join(req_time_lst[0].split("-")[::-1])
     req_hour = ":".join(req_time_lst[1].split(":")[:2])
     c.setFont("Times-Roman", 12)
     c.drawCentredString((offsetLeft + 1.275)*cm, (offsetTop + 2.66)*cm, req_date)
     c.setFont("Times-Roman", 12)
     c.drawCentredString((offsetLeft + 3.125)*cm, (offsetTop + 2.66)*cm, req_hour)
-    
-    # Author name and book title:
-    # c.setFont("Times-Roman", 12)
-    # c.drawString((offsetLeft + 0.36)*cm, (offsetTop + 5.3)*cm, obj["data"]["instanceContributorName"])
-    # c.drawString((offsetLeft + 0.36)*cm, (offsetTop + 5.9)*cm, obj["data"]["instanceTitle"])
     
     # Checkboxes:
     c.rect((offsetLeft + 0.1)*cm, (offsetTop + 5)*cm, 0.4*cm, 0.4*cm)
@@ -559,11 +504,11 @@ def layout_1_ret(c, service_point, offsetLeft, offsetTop, width, height, obj):
     
     # Item call number:
     c.setFont("Times-Roman", 16)
-    width = stringWidth(obj["data"]["itemCallNumber"], "Times-Roman", 16)
-    c.drawString(542.425 - width, (offsetTop + 0.85)*cm, obj["data"]["itemCallNumber"])
+    width = stringWidth(obj["itemCallNumber"], "Times-Roman", 16)
+    c.drawString(542.425 - width, (offsetTop + 0.85)*cm, obj["itemCallNumber"])
     
     # Item ID:
-    item_id = obj["data"]["itemBarcode"]
+    item_id = obj["itemBarcode"]
     c.setFont("Helvetica", 11)
     c.saveState()
     c.translate((offsetLeft + 15.55)*cm, (offsetTop + 2.5)*cm)
@@ -663,28 +608,28 @@ def layout_2(c, service_point, offsetLeft, offsetTop, width, height, obj):
     c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 3.45)*cm, "Fristzettel vom " + timestamp)
     
     c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 4.35)*cm, "für")
-    c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 4.85)*cm, obj["data"]["requesterBarcode"])
+    c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 4.85)*cm, obj["requesterBarcode"])
     # c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 5.35)*cm, obj["data"]["requestStatus"])
     
     c.setFont("Helvetica-Bold", 12)
     c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 6.75)*cm, "Signatur:")
     c.setFont("Helvetica", 12)
-    c.drawString((offsetLeft + 3.5)*cm, (offsetTop + 6.75)*cm, obj["data"]["itemCallNumber"])
+    c.drawString((offsetLeft + 3.5)*cm, (offsetTop + 6.75)*cm, obj["itemCallNumber"])
     c.setFont("Helvetica-Bold", 12)
     c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 7.25)*cm, "Titel:")
     c.setFont("Helvetica", 12)
-    c.drawString((offsetLeft + 2.7)*cm, (offsetTop + 7.25)*cm, obj["data"]["instanceTitle"])
+    c.drawString((offsetLeft + 2.7)*cm, (offsetTop + 7.25)*cm, obj["instanceTitle"])
     c.setFont("Helvetica-Bold", 12)
     c.drawString((offsetLeft + 1.5)*cm, (offsetTop + 7.75)*cm, "Buchnr:")
     c.setFont("Helvetica", 12)
-    c.drawString((offsetLeft + 3.25)*cm, (offsetTop + 7.75)*cm, obj["data"]["itemBarcode"])
+    c.drawString((offsetLeft + 3.25)*cm, (offsetTop + 7.75)*cm, obj["itemBarcode"])
     
     # Request date vertical:
     c.setFont("Helvetica-Bold", 17)
     c.saveState()
     c.translate((offsetLeft + 16.1)*cm, (offsetTop + (height / 2))*cm)
     c.rotate(-90)
-    c.drawCentredString(0, 0, obj["data"]["pickupServicePointName"])
+    c.drawCentredString(0, 0, obj["pickupServicePointName"])
     c.restoreState()
     
     # Request date vertical:
@@ -702,7 +647,7 @@ def layout_2(c, service_point, offsetLeft, offsetTop, width, height, obj):
     c.saveState()
     c.translate((offsetLeft + 17.75)*cm, (offsetTop + 6.8)*cm)
     c.rotate(-90)
-    c.drawCentredString(0, 0, obj["data"]["requesterBarcode"][:4])
+    c.drawCentredString(0, 0, obj["requesterBarcode"][:4])
     c.restoreState()
     
     # Request date vertical:
@@ -710,5 +655,5 @@ def layout_2(c, service_point, offsetLeft, offsetTop, width, height, obj):
     c.saveState()
     c.translate((offsetLeft + 17.75)*cm, (offsetTop + 3.65)*cm)
     c.rotate(-90)
-    c.drawCentredString(0, 0, obj["data"]["requesterBarcode"][4:6] + " " + obj["data"]["requesterBarcode"][6:9] + " " + obj["data"]["requesterBarcode"][9:])
+    c.drawCentredString(0, 0, obj["requesterBarcode"][4:6] + " " + obj["requesterBarcode"][6:9] + " " + obj["requesterBarcode"][9:])
     c.restoreState()
